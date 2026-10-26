@@ -1,0 +1,30 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器 / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 运行时日志与调试产物
+*.log
+debug.log
+npm-debug.log*
+yarn-error.log*
+
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+
+# 环境变量与本地密钥（本项目 API Key 存于浏览器 localStorage，此处为通用兜底）
+.env
+.env.*
+*.local
+
+# Python 本地服务器缓存（启动.bat 会调用 python -m http.server）
+__pycache__/
+*.py[cod]

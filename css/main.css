@@ -1,0 +1,71 @@
+.main-chat {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-width: 0;
+}
+
+.chat-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-dark);
+}
+
+.header-title {
+    font-size: 14px;
+    color: var(--text-sub);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+.header-title::before {
+    content: "《 ";
+    opacity: 0.5;
+}
+
+.header-title::after {
+    content: " 》";
+    opacity: 0.5;
+}
+
+.settings-btn, .world-btn {
+    background: none;
+    border: 1px solid #444;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-left: 10px;
+    transition: all 0.2s;
+}
+
+.settings-btn:hover, .world-btn:hover {
+    border-color: var(--text-main);
+    color: var(--text-main);
+}
+
+.world-btn {
+    color: var(--accent-color);
+    border-color: rgba(77, 107, 254, 0.3);
+}
+
+.word-count-display {
+    font-size: 11px;
+    color: var(--text-sub);
+    background: #222;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-right: 10px;
+}
+
+.word-count-display:hover {
+    color: var(--text-main);
+}

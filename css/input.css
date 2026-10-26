@@ -1,0 +1,93 @@
+.input-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(to top, var(--bg-dark) 80%, transparent);
+    z-index: 5;
+}
+
+.input-box-wrapper {
+    width: 80%;
+    max-width: 900px;
+    background-color: var(--bg-input);
+    border-radius: 12px;
+    padding: 12px 15px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #444;
+    transition: border-color 0.3s;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+}
+
+.input-box-wrapper:focus-within {
+    border-color: var(--accent-color);
+}
+
+.input-box-wrapper.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#userInput {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    resize: none;
+    outline: none;
+    font-size: 16px;
+    font-family: inherit;
+    max-height: 300px;
+    overflow-y: auto;
+    line-height: 1.5;
+}
+
+#userInput::-webkit-scrollbar {
+    display: none;
+}
+
+.input-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.model-badge {
+    font-size: 11px;
+    color: var(--text-sub);
+    background: #222;
+    padding: 2px 8px;
+    border-radius: 10px;
+    user-select: none;
+}
+
+.send-btn {
+    background-color: var(--text-main);
+    color: var(--bg-dark);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.send-btn:hover {
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.send-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}

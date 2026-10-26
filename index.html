@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <script>
+    // 检查是否在 Electron 环境下运行
+    if (window.localStorageProxy) {
+        Object.defineProperty(window, 'localStorage', {
+            value: window.localStorageProxy,
+            writable: false
+        });
+        console.log("已切换为本地文件存储模式 (Portable Mode)");
+    }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Novelist - 小说创作工作台 (Pro)</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✒️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+    <!-- CSS 文件 -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/input.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/worldbook.css">
+    <link rel="stylesheet" href="css/status.css">
+    <link rel="stylesheet" href="css/markdown.css">
+</head>
+<body>
+
+<div id="statusMessage" class="status"></div>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <span>✒️ AI Novelist</span>
+    </div>
+    
+    <!-- 书籍列表视图 -->
+    <div id="bookView" class="sidebar-view">
+        <button class="new-chat-btn" onclick="startNewChat()">+ 创建新书 (New Book)</button>
+        <div class="history-label">我的作品库</div>
+        <div id="historyList" class="history-list"></div>
+    </div>
+    
+    <!-- 章节列表视图 -->
+    <div id="chapterView" class="sidebar-view" style="display: none;">
+        <!-- 面包屑导航 -->
+        <div class="chapter-breadcrumb">
+            <div class="book-title-row">
+                <span id="currentBookTitle">未命名作品</span>
+                <button class="book-switch-btn" onclick="showBookList()" title="返回书籍列表">📚</button>
+            </div>
+            <div class="chapter-breadcrumb-row" id="currentChapterBreadcrumb">
+                <span class="no-chapter">未选择章节</span>
+            </div>
+        </div>
+        
+        <!-- 新建章节按钮 -->
+        <button class="new-chat-btn new-chapter-btn" onclick="createNewChapter()">+ 新建章节</button>
+        
+        <!-- 章节列表 -->
+        <div class="chapter-list-header">
+            <span>📑 章节列表</span>
+            <span id="chapterCount">0 章</span>
+        </div>
+        <div id="chapterList" class="chapter-list"></div>
+        
+        <!-- 返回书籍列表 -->
+        <button class="back-to-books" onclick="showBookList()">
+            ← 返回书籍列表
+        </button>
+    </div>
+</aside>
+
+<main class="main-chat">
+    <div class="chat-header">
+        <span class="header-title" id="currentTitle">未命名作品</span>
+        <div style="display: flex; align-items: center;">
+            <span class="word-count-display" id="wordCountDisplay" title="当前作品字数统计">📝 0 字</span>
+            <button class="world-btn" onclick="openWorldSettings()">📖 本书设定集 (世界书)</button>
+            <button class="settings-btn" onclick="openSettings()">⚙️ 设置 / 备份</button>
+        </div>
+    </div>
+
+    <div id="chatHistory">
+        <div class="welcome-screen">
+            <h2>开始创作你的新书</h2>
+            <p>每一本书都是独立的世界。<br>建议先在「设定集」中完善大纲。</p>
+        </div>
+    </div>
+
+    <!-- 章节信息栏 -->
+    <div id="inputChapterInfo" class="chapter-info-bar" style="display: none;"></div>
+    
+    <div class="input-container">
+        <div class="input-box-wrapper" id="inputWrapper">
+            <textarea id="userInput" placeholder="输入第一章剧情，或 '请根据设定帮我构思开头'..." rows="1" oninput="adjustTextareaHeight(this)"></textarea>
+            <div class="input-actions">
+                <div class="model-badge" id="currentModelDisplay">未配置模型</div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 世界书模态框 -->
+<div id="worldModal" class="modal">
+    <div class="modal-content" style="width: 900px; max-width: 95%;">
+        <div class="modal-header">
+            <h3>📖 世界书 (World Book) - <span id="worldModalTitle">当前作品</span></h3>
+            <button class="close-modal" onclick="closeWorldSettings()">&times;</button>
+        </div>
+
+        <!-- 标签页切换 -->
+        <div class="wb-tabs">
+            <button class="wb-tab-btn active" onclick="switchWorldBookTab('entries')" id="tabBtnEntries">
+                📚 设定条目
+            </button>
+            <button class="wb-tab-btn" onclick="switchWorldBookTab('outline')" id="tabBtnOutline">
+                🗺️ 大纲规划
+            </button>
+            <button class="wb-tab-btn" onclick="switchWorldBookTab('summary')" id="tabBtnSummary">
+                📜 剧情摘要
+            </button>
+        </div>
+
+        <!-- 设定条目标签页 -->
+        <div id="tabEntries" class="wb-tab-content active">
+            <div style="margin-bottom: 10px; color: #888; font-size: 12px; display: flex; justify-content: space-between;">
+                <span>💡 提示：左侧管理条目，右侧编辑详情。AI 写作时会根据<b>【触发词】</b>自动检索相关设定。</span>
+                <span id="entriesCount">0 条目</span>
+            </div>
+
+            <div class="wb-container">
+                <div class="wb-sidebar">
+                    <div class="wb-search-header">
+                        <input type="text" id="wbSearchInput" class="wb-input"
+                               placeholder="🔍 搜索名称或触发词..."
+                               style="padding: 6px; font-size: 12px; flex-grow: 1;"
+                               oninput="renderEntryList()">
+                        <button class="icon-btn-square" id="batchModeBtn" onclick="toggleBatchMode()" title="批量管理/删除">
+                            🗑️
+                        </button>
+                    </div>
+
+                    <div id="wbEntryList" class="wb-list"></div>
+
+                    <div class="wb-toolbar">
+                        <div id="wbNormalToolbar" style="display: flex; width: 100%;">
+                            <button class="btn-primary" style="flex:1; font-size:12px;" onclick="addWorldEntry()">+ 新建条目</button>
+                        </div>
+                        <div id="wbBatchToolbar">
+                            <button class="btn-danger" style="flex:1; font-size:12px;" onclick="executeBatchDelete()">删除选中</button>
+                            <button class="btn-secondary" style="width: 60px; font-size:12px;" onclick="toggleBatchMode()">完成</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wb-editor" id="wbEditorArea" style="display:none;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="wb-form-group" style="flex: 2;">
+                            <label>条目名称 (Title)</label>
+                            <input type="text" id="wbTitle" class="wb-input" placeholder="例如：李逍遥 / 蜀山派" oninput="updateCurrentEntry()">
+                        </div>
+                        <div class="wb-form-group" style="flex: 1;">
+                            <label>触发策略</label>
+                            <select id="wbStrategy" class="wb-input" onchange="updateCurrentEntry()">
+                                <option value="constant">🟢 全局常驻 (World)</option>
+                                <option value="mention">🟠 关键词触发 (Char/Item)</option>
+                            </select>
+                        </div>
+                        <div class="wb-form-group" style="width: 60px;">
+                            <label>开关</label>
+                            <input type="checkbox" id="wbEnabled" style="margin-top:10px;" onchange="updateCurrentEntry()" checked>
+                        </div>
+                    </div>
+
+                    <div class="wb-form-group">
+                        <label>触发关键词 (Key Words) <span style="font-weight:normal; color:#666">- 逗号分隔，仅在"触发模式"下有效</span></label>
+                        <input type="text" id="wbKeys" class="wb-input" placeholder="例如：李逍遥,李大侠,臭小子" oninput="updateCurrentEntry()">
+                    </div>
+
+                    <div class="wb-form-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+                        <label>设定内容 (Content)</label>
+                        <textarea id="wbContent" class="wb-input" style="flex-grow: 1; resize: none;" placeholder="输入该条目的具体描述、外貌、性格或背景故事..." oninput="updateCurrentEntry()"></textarea>
+                    </div>
+
+                    <div style="text-align: right;">
+                         <button class="btn-danger" style="padding: 4px 10px; font-size: 12px;" onclick="deleteCurrentEntry()">🗑️ 删除此条目</button>
+                    </div>
+                </div>
+
+                <div class="wb-editor" id="wbEmptyState" style="align-items: center; justify-content: center; color: #444;">
+                    <p>👈 请在左侧选择或新建一个设定条目</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 大纲规划标签页 -->
+        <div id="tabOutline" class="wb-tab-content">
+            <div style="margin-bottom: 10px; color: #888; font-size: 12px; display: flex; justify-content: space-between;">
+                <span>💡 提示：规划小说的分卷结构，设置前置分卷确保按顺序推进。AI 会根据当前分卷创作。</span>
+                <span id="outlineNodeCount">0 卷</span>
+            </div>
+
+            <div class="wb-container">
+                <div class="wb-sidebar">
+                    <div id="outlineNodeList" class="wb-list"></div>
+
+                    <div class="wb-toolbar">
+                        <button class="btn-primary" style="flex:1; font-size:12px;" onclick="createOutlineNode()">+ 新建分卷</button>
+                    </div>
+                </div>
+
+                <div class="wb-editor" id="outlineEditorArea" style="display:none;">
+                    <div style="display: flex; gap: 10px;">
+                        <div class="wb-form-group" style="flex: 2;">
+                            <label>分卷标题</label>
+                            <input type="text" id="outlineTitle" class="wb-input" placeholder="例如：初入江湖">
+                        </div>
+                        <div class="wb-form-group" style="flex: 1;">
+                            <label>状态</label>
+                            <select id="outlineStatus" class="wb-input">
+                                <option value="locked">🔒 锁定</option>
+                                <option value="planned">⚪ 计划中</option>
+                                <option value="writing">📝 进行中</option>
+                                <option value="completed">✅ 已完成</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="wb-form-group">
+                        <label>本卷概要</label>
+                        <textarea id="outlineDescription" class="wb-input" rows="3" placeholder="描述本卷的主要剧情内容..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div class="wb-form-group" style="flex: 1;">
+                            <label>目标字数</label>
+                            <input type="number" id="outlineWordCount" class="wb-input" placeholder="50000">
+                        </div>
+                        <div class="wb-form-group" style="flex: 1;">
+                            <label>起始章节</label>
+                            <input type="number" id="outlineChapterStart" class="wb-input" placeholder="1">
+                        </div>
+                        <div class="wb-form-group" style="flex: 1;">
+                            <label>结束章节</label>
+                            <input type="number" id="outlineChapterEnd" class="wb-input" placeholder="可选">
+                        </div>
+                    </div>
+
+                    <div class="wb-form-group">
+                        <label>前置分卷 <span style="font-weight:normal; color:#666">- 必须完成这些分卷才能开始本卷</span></label>
+                        <div id="outlineDependencies" class="dependencies-container"></div>
+                        <div id="outlineAvailableDeps" style="margin-top: 5px;"></div>
+                    </div>
+
+                    <div class="wb-form-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+                        <label>写作提示 / 备注</label>
+                        <textarea id="outlineNotes" class="wb-input" style="flex-grow: 1; resize: none;" placeholder="给AI的写作提示，例如：注意铺垫后续伏笔、保持主角性格一致..."></textarea>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between;">
+                        <button class="btn-danger" style="padding: 4px 10px; font-size: 12px;" onclick="deleteCurrentOutlineNode()">🗑️ 删除此分卷</button>
+                        <button class="btn-primary" style="padding: 4px 15px; font-size: 12px;" onclick="saveCurrentOutlineNode()">💾 保存分卷</button>
+                    </div>
+                </div>
+
+                <div class="wb-editor" id="outlineEmptyState" style="align-items: center; justify-content: center; color: #444;">
+                    <p>👈 请在左侧选择或新建一个分卷</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 剧情摘要标签页 -->
+        <div id="tabSummary" class="wb-tab-content">
+            <div class="config-group" style="margin-top: 15px;">
+                <label style="display:flex; justify-content:space-between;">
+                    <span>📜 动态剧情摘要 (Story Summary)</span>
+                    <button class="btn-secondary" onclick="autoGenerateSummary(event)">✨ AI 自动总结</button>
+                </label>
+                <div style="font-size: 11px; color: #888; margin-bottom: 5px;">
+                    记录当前剧情进度，AI会参考此内容保持剧情连贯性。
+                </div>
+                <textarea id="summaryInput" class="wb-input" rows="8" placeholder="剧情进度记录..."></textarea>
+            </div>
+        </div>
+
+        <div style="text-align: right; margin-top: 15px;">
+            <button class="btn-primary" onclick="saveWorldSettings()">保存全部设定</button>
+        </div>
+    </div>
+</div>
+
+<!-- 设置模态框 -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content" style="width: 750px;">
+        <div class="modal-header">
+            <h3>⚙️ 系统设置 & 数据管理</h3>
+            <button class="close-modal" onclick="closeSettings()">&times;</button>
+        </div>
+
+        <div class="settings-grid">
+            <div class="settings-column">
+                <div class="config-group">
+                    <label>API URL</label>
+                    <input type="text" id="apiUrl" placeholder="https://api.deepseek.com/v1">
+                </div>
+                <div class="config-group">
+                    <label>API Key</label>
+                    <input type="password" id="apiKey" placeholder="sk-...">
+                </div>
+                <div class="config-group">
+                    <label>模型名称</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="modelInput" placeholder="deepseek-chat">
+                        <button class="btn-primary" onclick="fetchModels()" style="width: auto; padding: 10px;">列表</button>
+                    </div>
+                    <select id="modelSelector" onchange="syncModelInputFromSelector()" style="margin-top: 5px;">
+                        <option value="">-- 选择模型 --</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="testConnection()" style="width:100%">🧪 测试 API 连接</button>
+            </div>
+
+            <div class="settings-column">
+                <div class="config-group">
+                    <label>Temperature (创意度) <span id="val_temp" class="slider-value" onclick="editSliderValue('val_temp', 'paramTemp', 0, 2, 0.1)">1.0</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramTemp" min="0" max="2" step="0.1" value="1.0" oninput="updateSlider('val_temp', this.value)">
+                    </div>
+                </div>
+                <div class="config-group">
+                    <label>Top P (多样性) <span id="val_topp" class="slider-value" onclick="editSliderValue('val_topp', 'paramTopP', 0, 1, 0.05)">1.0</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramTopP" min="0" max="1" step="0.05" value="1.0" oninput="updateSlider('val_topp', this.value)">
+                    </div>
+                </div>
+                <div class="config-group">
+                    <label>Presence Penalty (重复惩罚) <span id="val_pres" class="slider-value" onclick="editSliderValue('val_pres', 'paramPres', -2, 2, 0.1)">0.0</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramPres" min="-2" max="2" step="0.1" value="0.0" oninput="updateSlider('val_pres', this.value)">
+                    </div>
+                </div>
+                <div class="config-group">
+                    <label>Frequency Penalty <span id="val_freq" class="slider-value" onclick="editSliderValue('val_freq', 'paramFreq', -2, 2, 0.1)">0.0</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramFreq" min="-2" max="2" step="0.1" value="0.0" oninput="updateSlider('val_freq', this.value)">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <label>Max Tokens (回复长度上限) <span id="val_max_tok" class="slider-value" onclick="editSliderValue('val_max_tok', 'paramMaxTok', 100, 20000, 100)">2000</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramMaxTok" min="100" max="20000" step="100" value="2000" oninput="updateSlider('val_max_tok', this.value)">
+                    </div>
+                </div>
+                <div class="config-group">
+                    <label>Min Tokens (回复长度下限) <span id="val_min_tok" class="slider-value" onclick="editSliderValue('val_min_tok', 'paramMinTok', 0, 4000, 100)">0</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramMinTok" min="0" max="4000" step="100" value="0" oninput="updateSlider('val_min_tok', this.value)">
+                    </div>
+                    <div style="font-size:11px; color:#666; margin-top:2px;">* 设为0表示不限制最小长度。部分API可能不支持此参数。</div>
+                </div>
+                <div class="config-group">
+                    <label>Context Limit (附带历史) <span id="val_ctx" class="slider-value" onclick="editSliderValue('val_ctx', 'paramCtx', 0, 60, 1)">10</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="paramCtx" min="0" max="60" step="1" value="10" oninput="updateSlider('val_ctx', this.value)">
+                    </div>
+                    <div style="font-size:11px; color:#666; margin-top:2px;">* 0=不限制。设为10表示只发送最近10条对话，防Token溢出。</div>
+                </div>
+                <div class="config-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <label style="margin:0;">#️⃣ 显示楼层编号</label>
+                    <input type="checkbox" id="paramShowFloor" style="width:auto;">
+                </div>
+            </div>
+        </div>
+
+        <div class="config-group" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <label style="display:flex; justify-content:space-between; align-items:center;">
+                <span>🧠 模型设定 & 参数预设 (Preset)</span>
+                <span id="promptFileName" class="file-name-tag"></span>
+            </label>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-primary btn-backup" style="flex: 2;" onclick="document.getElementById('smartConfigFile').click()">📂 导入 预设/Config</button>
+                <button class="btn-primary btn-backup" style="flex: 2;" onclick="exportConfigPreset()">💾 导出当前预设</button>
+                <button class="btn-primary btn-danger" style="flex: 1;" onclick="resetConfigPreset()" title="清除所有人设和参数">🗑️ 清除</button>
+
+                <input type="file" id="smartConfigFile" style="display:none" accept=".json,.txt,.md" onchange="smartLoadConfig(this)">
+            </div>
+
+            <textarea id="systemPromptInput" rows="5" placeholder="输入 AI 的人设..."></textarea>
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                * 导入 config.json 时，会自动提取你的 "anti_ai_patterns" 等详细规则并附加在下方。
+            </div>
+        </div>
+
+        <div class="config-group" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <label>📝 自动总结提示词 (Summary Prompt)</label>
+            <div style="font-size: 11px; color: #888; margin-bottom: 5px; line-height: 1.4;">
+                * 自定义 AI 生成剧情摘要的逻辑（例如要求它关注伏笔或物品）。<br>
+                * <b>无需填写占位符</b>，系统会自动在您的指令下方附带【已知剧情】和【最近正文】。<br>
+            </div>
+            <textarea id="summaryPromptTemplate" rows="6" placeholder="输入总结用的提示词模板..."></textarea>
+            <button class="btn-secondary" style="margin-top:5px; width:100%" onclick="restoreDefaultSummaryPrompt()">↺ 恢复默认总结提示词</button>
+        </div>
+
+        <div class="config-group" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <label style="color: var(--text-main);">💾 备份与恢复 (Backup & Restore)</label>
+
+            <div style="font-size: 12px; color: #888; margin-bottom: 5px;">全库操作 (All Data):</div>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-primary btn-backup" style="flex: 1;" onclick="exportData()">📤 导出整个书架</button>
+                <button class="btn-primary btn-backup" style="flex: 1;" onclick="document.getElementById('importFile').click()">📥 恢复整个书架</button>
+            </div>
+
+            <div style="font-size: 12px; color: #888; margin-bottom: 5px;">当前作品 (Current Book):</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary btn-backup" style="flex: 1;" onclick="exportCurrentSession()">📤 导出本书 (含设定/剧情)</button>
+                <button class="btn-primary btn-backup" style="flex: 1;" onclick="document.getElementById('importSingleFile').click()">📥 导入单本作品</button>
+            </div>
+
+            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
+            <input type="file" id="importSingleFile" style="display:none" accept=".json" onchange="importSingleSession(this)">
+
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">* "导出本书"将生成包含完整对话历史和世界观设定的 JSON 文件。</p>
+        </div>
+
+        <div style="text-align: right; margin-top: 15px;">
+            <button class="btn-primary" onclick="saveConfig()">保存所有配置</button>
+        </div>
+    </div>
+</div>
+
+<!-- 重命名模态框 -->
+<div id="renameModal" class="modal" style="z-index: 3000;">
+    <div class="modal-content" style="width: 400px; height: auto; overflow: visible;">
+        <div class="modal-header">
+            <h3>✏️ 重命名作品</h3>
+            <button class="close-modal" onclick="closeRenameModal()">&times;</button>
+        </div>
+        <div class="config-group">
+            <input type="text" id="renameInput" class="wb-input"
+                   placeholder="请输入新的书名..."
+                   style="font-size: 16px; padding: 10px;"
+                   onkeydown="if(event.key==='Enter') confirmRename()">
+        </div>
+        <div style="text-align: right; margin-top: 15px;">
+            <button class="btn-secondary" onclick="closeRenameModal()">取消</button>
+            <button class="btn-primary" onclick="confirmRename()">确定保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 主应用脚本 -->
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>

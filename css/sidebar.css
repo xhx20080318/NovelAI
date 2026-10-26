@@ -1,0 +1,444 @@
+.sidebar {
+    width: 260px;
+    background-color: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    padding: 15px;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.logo-area {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-main);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 1px;
+    user-select: none;
+}
+
+.new-chat-btn {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: opacity 0.2s, transform 0.1s;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(77, 107, 254, 0.2);
+}
+
+.new-chat-btn:hover {
+    opacity: 0.9;
+}
+
+.new-chat-btn:active {
+    transform: scale(0.98);
+}
+
+.history-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.history-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+    padding-left: 5px;
+    text-transform: uppercase;
+}
+
+.history-item {
+    padding: 12px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-sub);
+    position: relative;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-item:hover {
+    background-color: #2a2a2a;
+    color: var(--text-main);
+}
+
+.history-item.active {
+    background-color: #2a2a2a;
+    color: var(--text-main);
+    border-left: 3px solid var(--accent-color);
+}
+
+.history-title {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 5px;
+}
+
+.history-item .book-icon {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.history-actions {
+    display: none;
+    gap: 5px;
+}
+
+.history-item:hover .history-actions {
+    display: flex;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    opacity: 0.7;
+}
+
+.icon-btn:hover {
+    opacity: 1;
+    color: var(--text-main);
+}
+
+.icon-btn.delete:hover {
+    color: var(--danger-color);
+}
+
+/* ========== 章节管理样式 ========== */
+
+.sidebar-view {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* 面包屑导航 */
+.chapter-breadcrumb {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.book-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.book-title-row span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-switch-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.book-switch-btn:hover {
+    background: var(--bg-hover);
+}
+
+.chapter-breadcrumb-row {
+    font-size: 12px;
+    color: var(--text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chapter-breadcrumb-row.has-chapter {
+    color: var(--accent-color);
+}
+
+.chapter-breadcrumb-row .chapter-number {
+    background: var(--accent-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.chapter-breadcrumb-row .chapter-number-only {
+    background: var(--accent-color);
+    color: white;
+    padding: 4px 0;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+    width: 60px;
+    text-align: center;
+    display: inline-block;
+}
+
+.chapter-breadcrumb-row .chapter-name {
+    font-weight: 500;
+}
+
+.chapter-breadcrumb-row .no-chapter {
+    color: #666;
+    font-style: italic;
+}
+
+/* 新建章节按钮 */
+.new-chapter-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    margin-bottom: 15px;
+}
+
+/* 章节列表头部 */
+.chapter-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+    padding: 0 5px;
+}
+
+/* 章节列表 */
+.chapter-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 15px;
+}
+
+/* 章节项 */
+.chapter-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-secondary);
+    border: 1px solid transparent;
+}
+
+.chapter-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.chapter-item.active {
+    background: rgba(77, 107, 254, 0.15);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.chapter-item-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chapter-status-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.chapter-number-badge {
+    background: var(--bg-hover);
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.chapter-item.active .chapter-number-badge {
+    background: var(--accent-color);
+    color: white;
+}
+
+.chapter-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.chapter-title {
+    font-size: 13px;
+    color: var(--text-main);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.chapter-item.active .chapter-title {
+    color: var(--accent-color);
+}
+
+.chapter-meta {
+    font-size: 11px;
+    color: #666;
+}
+
+.chapter-volume {
+    font-size: 10px;
+    color: #888;
+    margin-top: 3px;
+    padding-top: 3px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.chapter-item.active .chapter-volume {
+    color: var(--accent-color);
+    opacity: 0.8;
+}
+
+/* 章节标题输入框 */
+.chapter-title-input {
+    width: 100%;
+    background: var(--bg-main);
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--text-main);
+    outline: none;
+}
+
+/* 右键菜单 */
+.chapter-context-menu {
+    animation: fadeIn 0.15s ease;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 4px 0;
+    z-index: 1000;
+    min-width: 140px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.chapter-context-menu .menu-item {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: background 0.15s;
+    background: transparent;
+}
+
+.chapter-context-menu .menu-item:hover {
+    background: #3a3a3a;
+}
+
+.chapter-context-menu .menu-divider {
+    height: 1px;
+    background: #444;
+    margin: 4px 0;
+}
+
+.chapter-context-menu .text-danger {
+    color: #ef4444;
+}
+
+/* 返回书籍列表按钮 */
+.back-to-books {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-sub);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    margin-top: auto;
+}
+
+.back-to-books:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+    border-color: var(--text-sub);
+}
+
+/* 输入区域章节信息栏 */
+.chapter-info-bar {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.chapter-info-bar .chapter-label {
+    font-size: 13px;
+    color: var(--text-main);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.chapter-info-bar .chapter-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.chapter-info-bar .progress-bar {
+    width: 100px;
+    height: 6px;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.chapter-info-bar .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), #60a5fa);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.chapter-info-bar .progress-text {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
